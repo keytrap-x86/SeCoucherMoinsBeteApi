@@ -1,4 +1,4 @@
-﻿![](https://secouchermoinsbete.fr/images/gfx/header.png?a18f75db)
+﻿﻿![](https://secouchermoinsbete.fr/images/gfx/header.png?a18f75db)
 
 # SeCoucherMoinsBeteApi
 
@@ -6,6 +6,12 @@
 Comme son nom l'indique, c'est une petite api qui permet de récupérer des anecdotes depuis le site https://secouchermoinsbete.fr/.
 
 Cela m'a servit sur des applications faisant de longs traitements, afin de rendre la chose moins ennuyante, j'affiche des anecdotes le temps de l'attente.
+
+## Installation
+
+```Powershell
+Install-Package SeCoucherMoinsBeteApi
+```
 
 ## Utilisation
 
