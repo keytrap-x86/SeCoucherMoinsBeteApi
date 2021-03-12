@@ -13,46 +13,64 @@ namespace SeCoucherMoinsBeteApi
 {
     public static class ScmbApi
     {
-
-        public static async Task<List<Anecdote>> GetAnecdotes(string category)
+        /// <summary>
+        /// Permet de récupérer des anecdotes aléatoires.
+        /// Avec la version "gratuite", il n'est pas possible de filtrer par catégorie.
+        /// </summary>
+        /// <param name="max">Nombre maximum d'anecdotes à renvoyer (0 pour "infini")</param>
+        /// <returns></returns>
+        public static async Task<List<Anecdote>> AnecdotesAleatoires(int max = 0)
         {
+            var anecdotes = new List<Anecdote>();
+
             try
             {
-                var anecdotes = new List<Anecdote>();
+                
                 using (var http = new HttpClient())
                 {
-                    var response = await http.GetByteArrayAsync("http://secouchermoinsbete.fr/" + category);
-                    var resp = Encoding.UTF8.GetString(response, 0, response.Length - 1);
+                    var responseByte = await http.GetByteArrayAsync("http://secouchermoinsbete.fr/random");
 
+                    var html = Encoding.UTF8.GetString(responseByte, 0, responseByte.Length - 1);
 
-                    if (string.IsNullOrEmpty(resp))
-                        return null;
+                    // Si le code html contient cette phrase, alors le site nous empêche de lire les anecdotes
+                    // (sûrement car une catégorie a été spécifié)
+                    if (html.Contains("Pour accéder au contenu premium"))
+                        return max == 0 ? anecdotes : anecdotes.GetRange(0, max > anecdotes.Count ? anecdotes.Count - 1 : max);
 
+                    if (string.IsNullOrEmpty(html))
+                        return max == 0 ? anecdotes : anecdotes.GetRange(0, max > anecdotes.Count ? anecdotes.Count - 1 : max);
+
+                    // On créé un nouveau document Html
                     var document = new HtmlDocument();
-                    document.LoadHtml(resp);
+
+                    // On y injecte le code html
+                    document.LoadHtml(html);
+
+                    // On parcourt les nœuds
                     var articleNodes = document.DocumentNode.SelectNodes("//div[@class='anecdote-content-wrapper']/*/a");
                     if (articleNodes == null)
-                        return null;
+                        return max == 0 ? anecdotes : anecdotes.GetRange(0, max > anecdotes.Count ? anecdotes.Count - 1 : max);
 
-                    anecdotes.AddRange(from aNode in articleNodes.Nodes()
-                            .Where(n => n.InnerText != "En savoir plus")
-                        let id = aNode.ParentNode.ParentNode.ParentNode.ParentNode.Attributes["data-id"]
-                            .Value
-                        let body = aNode.InnerText.Trim()
-                        select new Anecdote(id,
-                            body));
+                    // On ajoute toutes les anecdotes à la liste
+                    anecdotes.AddRange(articleNodes.Nodes()
+                        .Where(n => n.InnerText != "En savoir plus")
+                        .Select(aNode => new
+                        {
+                            aNode,
+                            id = aNode.ParentNode.ParentNode.ParentNode.ParentNode.Attributes["data-id"].Value
+                        })
+                        .Select(t => new {t, body = t.aNode.InnerText.Trim()})
+                        .Select(t => new Anecdote(t.t.id, t.body)));
 
-                    return anecdotes;
+                    return max == 0 ? anecdotes : anecdotes.GetRange(0,max > anecdotes.Count ? anecdotes.Count - 1 : max);
 
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Console.WriteLine($"{DateTime.Now} [ERREUR] : {e.Message}\n{e.InnerException?.Message}");
+                return max == 0 ? anecdotes : anecdotes.GetRange(0, max > anecdotes.Count ? anecdotes.Count - 1 : max);
             }
-
-
-            return null;
         }
     }
 }
