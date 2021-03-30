@@ -7,6 +7,10 @@ Comme son nom l'indique, c'est une petite api qui permet de récupérer des anec
 
 Cela m'a servit sur des applications faisant de longs traitements, afin de rendre la chose moins ennuyante, j'affiche des anecdotes le temps de l'attente.
 
+## Exemple
+![image](https://user-images.githubusercontent.com/17864005/112998245-25b54980-916e-11eb-98bb-3c9dab8d5707.png)
+
+
 ## Installation
 
 ```Powershell
